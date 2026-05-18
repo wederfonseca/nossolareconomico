@@ -1,0 +1,319 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+html,
+body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+body{
+  font-family:'Montserrat',sans-serif;
+  background:#F5EFE6;
+  color:#3B2510;
+}
+
+/* CONTAINER */
+
+.container{
+  width:100%;
+  max-width:480px;
+  margin:0 auto;
+  padding:10px;
+}
+
+/* HERO */
+
+.hero{
+  width:100%;
+  background:#fff;
+  border-radius:24px;
+  padding:20px 16px;
+  text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,0.05);
+  border:1px solid #EAE0D5;
+  overflow:hidden;
+}
+
+/* BRAND */
+
+.brand-header{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.logo{
+  width:140px;
+  max-width:100%;
+  border-radius:22px;
+  margin-bottom:10px;
+  display:block;
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.08),
+    0 2px 6px rgba(0,0,0,0.04);
+}
+
+.tag{
+  background:#EEF0E6;
+  color:#6B7A41;
+  padding:7px 14px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  max-width:100%;
+}
+
+/* TITLE */
+
+h1{
+  font-size:30px;
+  line-height:1.08;
+  letter-spacing:-1px;
+  margin-bottom:14px;
+  font-weight:800;
+  word-break:break-word;
+  color:#3B2510;
+}
+
+.subtitle{
+  font-size:14px;
+  line-height:1.45;
+  color:#6B5C4E;
+  margin-bottom:16px;
+}
+
+/* PROOF */
+
+.proof{
+  display:inline-block;
+  background:#F5EFE6;
+  color:#5C4A38;
+  padding:8px 14px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:14px;
+  max-width:100%;
+}
+
+/* SPOTS */
+
+.spots-box{
+  background:#EEF0E6;
+  color:#6B7A41;
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:700;
+  display:inline-block;
+  margin-bottom:18px;
+  max-width:100%;
+}
+
+/* CTA */
+
+.cta-button{
+  display:block;
+  width:100%;
+  max-width:100%;
+  background:#3B2510;
+  color:#fff;
+  text-decoration:none;
+  padding:16px;
+  border-radius:16px;
+  font-size:15px;
+  font-weight:800;
+  margin-bottom:10px;
+  animation:pulse 2s infinite;
+  box-shadow:0 8px 20px rgba(59,37,16,0.22);
+  transform-origin:center;
+}
+
+@keyframes pulse{
+
+  0%{
+    transform:scale(1);
+  }
+
+  50%{
+    transform:scale(1.01);
+  }
+
+  100%{
+    transform:scale(1);
+  }
+
+}
+
+.small-text{
+  font-size:11px;
+  color:#7A726C;
+  margin-bottom:18px;
+}
+
+/* STORES */
+
+.stores{
+  width:100%;
+}
+
+.stores p{
+  font-size:12px;
+  color:#6D655F;
+  margin-bottom:14px;
+  font-weight:600;
+}
+
+.store-logos{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:16px;
+  width:100%;
+}
+
+.store{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.store img{
+  object-fit:contain;
+  display:block;
+  opacity:0.9;
+}
+
+/* LOGOS */
+
+.amazon img{
+  height:20px;
+}
+
+.mercadolivre img{
+  height:22px;
+}
+
+.magalu img{
+  height:20px;
+}
+
+.shopee img{
+  height:22px;
+}
+
+.shein img{
+  height:16px;
+}
+
+/* FOOTER */
+
+footer{
+  text-align:center;
+  font-size:11px;
+  color:#7A726C;
+  padding:18px 0;
+}
+
+/* POPUP */
+
+.join-popup{
+  position:fixed;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  background:#fff;
+  border-radius:14px;
+  padding:10px 12px;
+  display:none;
+  align-items:center;
+  gap:10px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.12);
+  z-index:9999;
+  transition:all 0.3s ease;
+  opacity:0;
+  max-width:calc(100vw - 20px);
+}
+
+.popup-icon{
+  width:36px;
+  height:36px;
+  min-width:36px;
+  background:#25D366;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.popup-name{
+  font-size:13px;
+  font-weight:700;
+  color:#3B2510;
+  line-height:1.2;
+}
+
+.popup-action{
+  font-size:11px;
+  color:#6D655F;
+  line-height:1.2;
+}
+
+/* DESKTOP */
+
+@media(min-width:768px){
+
+  .container{
+    padding:20px;
+  }
+
+  .hero{
+    padding:30px 26px;
+  }
+
+  .logo{
+    width:170px;
+  }
+
+  h1{
+    font-size:42px;
+  }
+
+  .subtitle{
+    font-size:17px;
+  }
+
+  .amazon img{
+    height:24px;
+  }
+
+  .mercadolivre img{
+    height:26px;
+  }
+
+  .magalu img{
+    height:24px;
+  }
+
+  .shopee img{
+    height:26px;
+  }
+
+  .shein img{
+    height:20px;
+  }
+
+  .join-popup{
+    left:20px;
+    right:auto;
+    max-width:260px;
+  }
+
+}
