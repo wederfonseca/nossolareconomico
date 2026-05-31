@@ -35,12 +35,13 @@ async function sendEvent(payload) {
         'x-capi-signature': 'v1'
       },
       body: payload,
-      keepalive: true
+      keepalive: true,
+      signal: AbortSignal.timeout(4000)
     });
 
-  } catch (err) {
+  } catch {
 
-    console.warn('[CAPI] send error', err);
+    // silently ignore — fire-and-forget analytics request
 
   }
 
