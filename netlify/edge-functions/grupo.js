@@ -68,13 +68,31 @@ const TETO_PADRAO = 950;   /* decidido por ele em 2026-09-02; folga até os 1.02
 const ESCOLHER = `
 local faixa = ARGV[1]
 local dia   = ARGV[2]
+local agora = ARGV[3]
+
+-- 🔴 REGISTRAR SEMPRE, inclusive quando não há grupo nenhum.
+--
+-- A primeira versão só registrava quando ACHAVA um grupo. Com a fila ainda vazia (que é o
+-- estado do primeiro dia, antes da extensão existir), o clique saía para o link reserva
+-- CALADO — e os anúncios já estavam rodando. Ou seja: a atribuição, que é a razão inteira
+-- desta função existir, estava indo para o lixo justamente na janela em que ele mais
+-- precisa dela. Dado de anúncio não volta depois.
+--
+-- Agora o clique é contado nos três desfechos, e o "destino" diz qual foi: o id do grupo,
+-- ou 'reserva'. Assim dá para distinguir "atendi" de "não tinha grupo" no relatório, em
+-- vez de os dois virarem o mesmo silêncio ([[gotcha-falha-indistinguivel-de-sucesso]]).
+local function registrar(destino)
+  local k = 'g:clique:' .. dia .. ':' .. faixa
+  redis.call('HINCRBY', k, 'total', 1)
+  redis.call('HINCRBY', k, destino, 1)
+  redis.call('EXPIRE', k, 7776000)
+  redis.call('SADD', 'g:faixas', faixa)
+  redis.call('SET', 'g:ultimo', agora)
+end
 
 local fila = redis.call('LRANGE', 'g:fila:' .. faixa, 0, -1)
 if #fila == 0 then
   fila = redis.call('LRANGE', 'g:fila:geral', 0, -1)
-end
-if #fila == 0 then
-  return {}
 end
 
 local ultimo_id, ultimo_link
@@ -89,11 +107,7 @@ for i = 1, #fila do
       local n    = tonumber(redis.call('HGET', h, 'contador') or '0')
       if n < teto then
         local novo = redis.call('HINCRBY', h, 'contador', 1)
-        local k = 'g:clique:' .. dia .. ':' .. faixa
-        redis.call('HINCRBY', k, 'total', 1)
-        redis.call('HINCRBY', k, id, 1)
-        redis.call('EXPIRE', k, 7776000)
-        redis.call('SET', 'g:ultimo', ARGV[3])
+        registrar(id)
         return { id, link, tostring(novo), tostring(teto) }
       end
     end
@@ -103,14 +117,12 @@ end
 -- Todos lotados. Manda para o ÚLTIMO assim mesmo: um grupo cheio ainda aceita gente
 -- (o teto real do WhatsApp é 1.024, o nosso é 950), e um link morto não aceita ninguém.
 if ultimo_link then
-  local k = 'g:clique:' .. dia .. ':' .. faixa
-  redis.call('HINCRBY', k, 'total', 1)
-  redis.call('HINCRBY', k, ultimo_id, 1)
-  redis.call('EXPIRE', k, 7776000)
-  redis.call('SET', 'g:ultimo', ARGV[3])
+  registrar(ultimo_id)
   return { ultimo_id, ultimo_link, 'LOTADO', 'LOTADO' }
 end
 
+-- Nenhum grupo cadastrado ainda: vai para o reserva, mas o clique NÃO se perde.
+registrar('reserva')
 return {}
 `;
 
