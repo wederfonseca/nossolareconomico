@@ -104,7 +104,12 @@
       </div>
 
       <!-- CTA -->
+      <!-- 2026-09-02: o destino passou a ser NOSSO /g, e nao mais o redirecionador de
+           terceiro. O href fica com o link direto como fallback puro de HTML: se o JS
+           abaixo nao rodar (ou falhar), o botao continua levando a pessoa pro grupo.
+           O JS troca para /g e leva junto de qual ANUNCIO ela veio. -->
       <a
+        id="ctaGrupo"
         href="https://app.lumiofertasinteligentes.com.br/r/nossolareconomico"
         class="cta-button"
       >
@@ -185,6 +190,56 @@
 
   <!-- MAIN JS -->
   <script src="assets/js/main.js"></script>
+
+  <!--
+    ATRIBUICAO DO ANUNCIO -> GRUPO  (2026-09-02)
+
+    O teste de anuncios precisa saber QUAL anuncio trouxe cada pessoa. O Meta preenche
+    os parametros dinamicos na URL do anuncio (ex.: ?ad={{ad.id}}), a pessoa chega nesta
+    pagina com eles, e este trecho leva os mesmos parametros adiante no clique do botao.
+    Sem isto a informacao morre aqui, que e o que acontecia ate hoje.
+
+    Dois cuidados de proposito:
+      1. o href do HTML ja aponta pro grupo. Este script MELHORA o destino; se ele nao
+         rodar, o botao continua funcionando. Nunca ficar sem redirecionar.
+      2. os parametros sao GUARDADOS em sessionStorage: se a pessoa recarregar a pagina
+         ou voltar de outra aba, a origem nao se perde no meio do caminho.
+  -->
+  <script>
+  (function () {
+
+    var CHAVES = ['ad', 'adset', 'camp', 'utm_source', 'utm_medium',
+                  'utm_campaign', 'utm_content', 'utm_term', 'fbclid'];
+
+    var botao = document.getElementById('ctaGrupo');
+    if (!botao) return;
+
+    var atual = new URLSearchParams(location.search);
+    var guardado = {};
+
+    try {
+      guardado = JSON.parse(sessionStorage.getItem('nle_origem') || '{}');
+    } catch (e) { guardado = {}; }
+
+    var origem = {};
+
+    CHAVES.forEach(function (k) {
+      var v = atual.get(k) || guardado[k];
+      if (v) origem[k] = v;
+    });
+
+    try {
+      if (Object.keys(origem).length) {
+        sessionStorage.setItem('nle_origem', JSON.stringify(origem));
+      }
+    } catch (e) { /* navegador sem storage: segue sem guardar */ }
+
+    var destino = new URL('/g', location.origin);
+    Object.keys(origem).forEach(function (k) { destino.searchParams.set(k, origem[k]); });
+
+    botao.href = destino.toString();
+  })();
+  </script>
 
 </body>
 </html>
