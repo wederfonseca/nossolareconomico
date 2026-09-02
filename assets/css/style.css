@@ -220,7 +220,17 @@ footer{
   font-size:11px;
   color:#7A726C;
   padding:18px 0;
+  line-height:1.9;
 }
+
+/* Politica e Termos: a Meta exige as duas URLs publicas para o app sair do modo de
+   desenvolvimento, e prefere ve-las LINKADAS. Discretas de proposito -- rodape e rodape. */
+footer a{
+  color:#6B7A41;
+  text-decoration:none;
+  font-weight:600;
+}
+footer a:hover{ text-decoration:underline; }
 
 /* POPUP */
 
