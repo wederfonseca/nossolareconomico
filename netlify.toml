@@ -5,3 +5,9 @@
 [[edge_functions]]
   function = "collect"
   path = "/collect"
+# Redirecionador de grupos (2026-09-02). O botao da landing aponta para /g e leva
+# junto de qual ANUNCIO a pessoa veio -- e essa era a informacao que se perdia
+# quando o botao ia direto para o redirecionador de terceiro.
+[[edge_functions]]
+  function = "grupo"
+  path = "/g"
