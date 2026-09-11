@@ -17,7 +17,7 @@
  *
  *   Redis fora do ar          → LINK_RESERVA (constante abaixo, não depende de nada)
  *   nenhum grupo cadastrado   → LINK_RESERVA
- *   todos os grupos lotados   → o último da fila mesmo assim + aviso no Telegram
+ *   todos os grupos lotados   → o último ATIVO da fila mesmo assim + aviso no Telegram
  *   erro inesperado           → LINK_RESERVA
  *
  * Nenhum caminho mostra página de erro. O aviso é para o OPERADOR, nunca para quem
@@ -69,7 +69,6 @@ const ESCOLHER = `
 local faixa = ARGV[1]
 local dia   = ARGV[2]
 local agora = ARGV[3]
-
 -- 🔴 REGISTRAR SEMPRE, inclusive quando não há grupo nenhum.
 --
 -- A primeira versão só registrava quando ACHAVA um grupo. Com a fila ainda vazia (que é o
@@ -89,38 +88,61 @@ local function registrar(destino)
   redis.call('SADD', 'g:faixas', faixa)
   redis.call('SET', 'g:ultimo', agora)
 end
-
-local fila = redis.call('LRANGE', 'g:fila:' .. faixa, 0, -1)
+local nome_fila = 'g:fila:' .. faixa
+local fila = redis.call('LRANGE', nome_fila, 0, -1)
 if #fila == 0 then
-  fila = redis.call('LRANGE', 'g:fila:geral', 0, -1)
+  nome_fila = 'g:fila:geral'
+  fila = redis.call('LRANGE', nome_fila, 0, -1)
 end
-
-local ultimo_id, ultimo_link
-for i = 1, #fila do
+local n = #fila
+-- 🔴 A FILA ANDA PARA A FRENTE E NÃO VOLTA (2026-09-11, pedido dele: "se ele estiver no grupo 3
+-- e tiver vaga no 1, ele volta ou continua? eu preferia que continuasse a lista, independente da
+-- ordenação, toda a lista completa").
+--
+-- Antes, cada clique varria a lista do PRIMEIRO: bastava um grupo lá atrás ganhar vaga (alguém
+-- saiu e a extensão reancorou o contador) para o tráfego voltar a ele. Agora existe um CURSOR
+-- por fila (g:cursor:<fila>) com o id do grupo que está recebendo: a busca começa nele e só dá
+-- a volta depois de passar pelo fim. O grupo que ficou para trás volta a receber quando a lista
+-- inteira tiver sido percorrida — "toda a lista completa".
+--
+-- ⚠️ Por ID, não por posição: o Postaí reescreve g:fila a cada leitura, e a ordem "menos vagas"
+-- muda com as contagens. Se o id do cursor sumiu da lista (saiu do rodízio), começa do 1º.
+local chave_cursor = 'g:cursor:' .. nome_fila
+local inicio = 1
+local atual = redis.call('GET', chave_cursor)
+if atual then
+  for i = 1, n do
+    if fila[i] == atual then inicio = i break end
+  end
+end
+-- O "último da fila" para o caso LOTADO é o último ATIVO com link, na ordem da LISTA (o mais
+-- novo, que é o que tem mais folga até os 1.024). Antes o "último" era capturado ANTES de olhar
+-- o `ativo`: um grupo que ele tirou do rodízio (ativo=0) podia receber todo o tráfego quando os
+-- outros lotassem.
+local ultimo_id, ultimo_link, ultimo_idx = nil, nil, 0
+for passo = 0, n - 1 do
+  local i = ((inicio - 1 + passo) % n) + 1
   local id = fila[i]
   local h  = 'g:grupo:' .. id
   local link = redis.call('HGET', h, 'link')
-  if link and link ~= '' then
-    ultimo_id, ultimo_link = id, link
-    if redis.call('HGET', h, 'ativo') ~= '0' then
-      local teto = tonumber(redis.call('HGET', h, 'teto') or '${TETO_PADRAO}')
-      local n    = tonumber(redis.call('HGET', h, 'contador') or '0')
-      if n < teto then
-        local novo = redis.call('HINCRBY', h, 'contador', 1)
-        registrar(id)
-        return { id, link, tostring(novo), tostring(teto) }
-      end
+  if link and link ~= '' and redis.call('HGET', h, 'ativo') ~= '0' then
+    if i > ultimo_idx then ultimo_id, ultimo_link, ultimo_idx = id, link, i end
+    local teto = tonumber(redis.call('HGET', h, 'teto') or '${TETO_PADRAO}')
+    local c    = tonumber(redis.call('HGET', h, 'contador') or '0')
+    if c < teto then
+      local novo = redis.call('HINCRBY', h, 'contador', 1)
+      redis.call('SET', chave_cursor, id)
+      registrar(id)
+      return { id, link, tostring(novo), tostring(teto) }
     end
   end
 end
-
--- Todos lotados. Manda para o ÚLTIMO assim mesmo: um grupo cheio ainda aceita gente
+-- Todos lotados. Manda para o ÚLTIMO ativo assim mesmo: um grupo cheio ainda aceita gente
 -- (o teto real do WhatsApp é 1.024, o nosso é 950), e um link morto não aceita ninguém.
 if ultimo_link then
   registrar(ultimo_id)
   return { ultimo_id, ultimo_link, 'LOTADO', 'LOTADO' }
 end
-
 -- Nenhum grupo cadastrado ainda: vai para o reserva, mas o clique NÃO se perde.
 registrar('reserva')
 return {}
