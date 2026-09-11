@@ -117,7 +117,7 @@ if atual then
 end
 -- O "último da fila" para o caso LOTADO é o último ATIVO com link, na ordem da LISTA (o mais
 -- novo, que é o que tem mais folga até os 1.024). Antes o "último" era capturado ANTES de olhar
--- o `ativo`: um grupo que ele tirou do rodízio (ativo=0) podia receber todo o tráfego quando os
+-- o 'ativo': um grupo que ele tirou do rodízio (ativo=0) podia receber todo o tráfego quando os
 -- outros lotassem.
 local ultimo_id, ultimo_link, ultimo_idx = nil, nil, 0
 for passo = 0, n - 1 do
