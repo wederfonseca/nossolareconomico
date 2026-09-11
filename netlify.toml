@@ -5,9 +5,28 @@
 [[edge_functions]]
   function = "collect"
   path = "/collect"
-# Redirecionador de grupos (2026-09-02). O botao da landing aponta para /g e leva
+# Redirecionador de grupos (2026-09-02). O botao da landing aponta para ca e leva
 # junto de qual ANUNCIO a pessoa veio -- e essa era a informacao que se perdia
 # quando o botao ia direto para o redirecionador de terceiro.
+#
+# DOIS CAMINHOS, A MESMA FUNCAO (2026-09-05, a pedido dele: "quero mudar aquele g
+# pra grupo no link"). `/grupo` e o caminho novo e legivel, e e o que o botao da
+# landing passa a montar (`index.html`).
+#
+# `/g` FICA VIVO como atalho, e vale registrar POR QUE quase o aposentei errado:
+# eu tinha concluido, pela API da Meta, que os tres anuncios ACTIVE apontavam para
+# `/g` -- porque os ids deles estao em `g:faixas` no Upstash. ELE corrigiu: "eles
+# nao apontam para o g, eles apontam pra landing, o g esta la no botao". Os ids
+# chegam ao Upstash porque a LANDING carrega o `?ad=` para o botao. Logo trocar o
+# caminho nao quebra anuncio nenhum -- so exige trocar o botao, que e nosso.
+#
+# `/g` fica assim mesmo: custa uma linha e cobre qualquer link antigo em post,
+# story ou bio que ninguem lembra de ter publicado. A regra que sobra: caminho
+# publicado nao se aposenta por deploy.
+[[edge_functions]]
+  function = "grupo"
+  path = "/grupo"
+
 [[edge_functions]]
   function = "grupo"
   path = "/g"

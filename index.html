@@ -234,7 +234,10 @@
       }
     } catch (e) { /* navegador sem storage: segue sem guardar */ }
 
-    var destino = new URL('/g', location.origin);
+    /* 2026-09-05, a pedido dele: "quero mudar aquele g pra grupo no link". O `/g`
+       continua atendendo no netlify.toml, para nao quebrar nada ja publicado que
+       aponte para ele -- mas o botao daqui passa a usar o caminho legivel. */
+    var destino = new URL('/grupo', location.origin);
     Object.keys(origem).forEach(function (k) { destino.searchParams.set(k, origem[k]); });
 
     botao.href = destino.toString();
