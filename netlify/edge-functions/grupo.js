@@ -256,7 +256,20 @@ export default async (request, context) => {
     }
 
     const agora = new Date();
-    const dia = agora.toISOString().slice(0, 10);
+    /* 2026-09-19 — O DIA E O DE BRASILIA, e ate hoje era o de UTC.
+     *
+     * `toISOString()` devolve UTC: clique das 21h as 24h de Brasilia caia no dia SEGUINTE desta
+     * chave, enquanto o `/collect` (que manda o Lead ao pixel) ja usava
+     * `toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })` e a Meta reporta no fuso
+     * da conta. Tres contadores do mesmo funil, dois fusos: comparar o dia de um com o dia do
+     * outro era comparar janelas de 24h deslocadas em 3 horas.
+     *
+     * Ele viu o sintoma antes da causa: "a contagem da upstash no log da netlify nao ta batendo
+     * com os leads da meta".
+     *
+     * ⚠️ A serie historica tem um degrau no dia desta troca: os dias anteriores a 19/09/2026
+     * estao em UTC. Quem for comparar periodo que atravessa essa data precisa saber disso. */
+    const dia = agora.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
     /* Uma chamada: escolhe + soma + registra. */
     const res = await fetch(`${REDIS_URL}/`, {

@@ -1,5 +1,3 @@
-const WAIT_MS = 500;
-
 let locked = false;
 
 /* ================= UTIL ================= */
@@ -50,6 +48,23 @@ async function sendEvent(payload) {
 /* ================= MAIN ================= */
 
 document.addEventListener('DOMContentLoaded', () => {
+
+  /* ================= VISITA (2026-09-19) =================
+   *
+   * Conta quem CHEGOU, nao quem clicou. E o degrau que faltava entre o clique no anuncio
+   * (Meta) e o clique no botao (`g:clique:<dia>`) — sem ele nao da para separar "nao chegou na
+   * pagina" de "chegou e o Lead nao disparou". Ver o bloco VISITA em `collect.js`.
+   *
+   * `keepalive`: se ela sair da pagina em seguida, o pedido ainda vai. Falha nao faz nada: e
+   * medicao, nunca pode atrapalhar quem esta entrando no grupo. */
+  try {
+    fetch('/collect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-capi-signature': 'v1' },
+      body: JSON.stringify({ event_id: 'visita-' + generateEventId(), evento: 'visita' }),
+      keepalive: true
+    }).catch(() => {});
+  } catch { /* sem fetch: segue */ }
 
   /* ================= CTA ================= */
 
@@ -106,19 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       sendEvent(payload);
 
-      /* ================= BROWSER EVENT + REDIRECT ================= */
-
-      let redirected = false;
-
-      const redirect = () => {
-        if (redirected) return;
-        redirected = true;
-        window.location.href = targetUrl;
-      };
-
-      // fallback: redireciona após WAIT_MS caso o callback não dispare
-      setTimeout(redirect, WAIT_MS);
-
+      /* ================= BROWSER EVENT + REDIRECT =================
+       *
+       * 2026-09-19 — O REDIRECT DEIXOU DE ESPERAR. Antes: `preventDefault` + 500 ms de
+       * "Abrindo..." antes de sair. Meio segundo parado, no navegador de dentro do Instagram,
+       * e desistencia que ninguem mede — e a espera nao comprava nada: quem REGISTRA o Lead com
+       * certeza e o CAPI do servidor (`/collect`, ja enviado acima com `keepalive`), nao o
+       * `fbq` do navegador, que nem sempre termina antes da navegacao de qualquer jeito.
+       *
+       * O `fbq` continua sendo disparado, com o MESMO `eventID` do CAPI: quando ele chega, a
+       * Meta deduplica; quando nao chega, o servidor ja contou. Nao ha aposta nos dois lados. */
       fbq(
         'track',
         'Lead',
@@ -127,9 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         {
           eventID: eventId
-        },
-        redirect
+        }
       );
+
+      window.location.href = targetUrl;
 
     });
 

@@ -66,6 +66,43 @@ export default async (request, context) => {
 
     }
 
+    /* ================= VISITA (2026-09-19) =================
+     *
+     * O degrau que FALTAVA no funil. Ate hoje media-se o clique no anuncio (Meta), o clique no
+     * botao (`g:clique:<dia>`) e a entrada no grupo (extensao) — e nada media quem CHEGOU na
+     * pagina. Sem esse numero, "sumiram 30% entre o link e a landing" e indistinguivel de "o
+     * pixel nao disparou": as duas hipoteses previam exatamente o mesmo dado.
+     *
+     * ⚠️ Nao manda nada ao Meta e nao entra no dedupe de Lead: visita nao e conversao. E o dia e
+     * o de Brasilia, o mesmo do contador e do `/grupo` — comparar dias de fusos diferentes foi o
+     * defeito que esta entrega comecou consertando.
+     *
+     * ⚠️ Conta VISITA, nao pessoa: recarregar a pagina soma outra. E de proposito — o
+     * denominador que interessa e "quantas aberturas de pagina", que e o que a Meta cobra. */
+    if (body.evento === 'visita') {
+
+      const diaBR = new Date()
+        .toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+
+      await fetch(`${REDIS_URL}/pipeline`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${REDIS_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify([
+          ['hincrby', `g:visita:${diaBR}`, 'total', 1],
+          ['expire', `g:visita:${diaBR}`, 5184000]
+        ])
+      }).catch(() => null);
+
+      return new Response(
+        JSON.stringify({ ok: true, visita: true }),
+        { status: 200 }
+      );
+
+    }
+
     const shortEventId = body.event_id.slice(0, 8);
 
     /* ================= REDIS KEYS ================= */
