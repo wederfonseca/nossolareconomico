@@ -1,6 +1,10 @@
 [build]
   publish = "."
   edge_functions = "netlify/edge-functions"
+  # 2026-09-19 — as Functions normais (nao Edge) moram aqui. A primeira e a agendada
+  # `vigia-postai`, que confere de hora em hora se a maquina dele ainda esta viva. Ela roda na
+  # NUVEM de proposito: computador desligado nao consegue avisar que esta desligado.
+  functions = "netlify/functions"
 
 [[edge_functions]]
   function = "collect"
