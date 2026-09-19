@@ -148,104 +148,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
-  /* ================= CONTADOR + POPUP ================= */
-
-  const femaleNames = [
-    "Mariana",
-    "Fernanda",
-    "Camila",
-    "Juliana",
-    "Patrícia",
-    "Amanda",
-    "Bruna",
-    "Larissa",
-    "Renata",
-    "Vanessa",
-    "Aline",
-    "Gabriela",
-    "Paula",
-    "Tatiane",
-    "Bianca",
-    "Débora",
-    "Natália",
-    "Jéssica",
-    "Carla",
-    "Beatriz",
-    "Cristiane",
-    "Michele",
-    "Priscila",
-    "Elaine",
-    "Viviane"
-  ];
-
-  const popup = document.getElementById("joinPopup");
-  const popupName = document.getElementById("popupName");
-  const spotsNumber = document.getElementById("spotsNumber");
-
-  let spots = Math.floor(Math.random() * 11) + 30;
-
-  if (spotsNumber) {
-    spotsNumber.textContent = spots;
-  }
-
-  function randomName() {
-
-    return femaleNames[
-      Math.floor(Math.random() * femaleNames.length)
-    ];
-
-  }
-
-  function showPopup() {
-
-    if (!popup || !popupName || !spotsNumber) return;
-
-    if (spots <= 1) return;
-
-    popupName.textContent = randomName();
-
-    spots--;
-
-    spotsNumber.textContent = spots;
-
-    popup.style.display = "flex";
-
-    setTimeout(() => {
-
-      popup.style.opacity = "1";
-      popup.style.transform = "translateY(0)";
-
-    }, 50);
-
-    setTimeout(() => {
-
-      popup.style.opacity = "0";
-      popup.style.transform = "translateY(10px)";
-
-      setTimeout(() => {
-
-        popup.style.display = "none";
-
-      }, 300);
-
-    }, 4000);
-
-  }
-
-  // primeira exibição
-  setTimeout(() => {
-
-    showPopup();
-
-  }, 1500);
-
-  // próximas entradas
-  setInterval(() => {
-
-    showPopup();
-
-  }, 9000);
-
+  /* ================= 2026-09-19 — O POPUP SAIU =================
+   *
+   * Ele: "retire o popup da landing, nao quero nem o original".
+   *
+   * O que havia aqui: um aviso "Fulana entrou no grupo" com nome sorteado de uma lista fixa de
+   * 25 nomes, a cada 9 segundos, e um contador de "vagas restantes hoje" que nascia de
+   * `Math.random()` entre 30 e 40 e ia caindo junto. Nenhum dos dois olhava dado nenhum.
+   *
+   * O numero REAL existe e e melhor: 11 grupos, teto de 950 cada, e a contagem de membros que a
+   * extensao sincroniza no Upstash a cada 30 min. Se algum dia voltar a mostrar vaga ou entrada
+   * nesta pagina, que venha de la — decisao dele, e ate la a pagina nao afirma nada que nao
+   * possa provar. */
 });
 
 /* ================= PAGE BACK FIX ================= */

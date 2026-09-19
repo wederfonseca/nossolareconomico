@@ -98,10 +98,11 @@
         +12 mil membros
       </div>
 
-      <!-- SPOTS -->
-      <div class="spots-box">
-        <span id="spotsNumber"></span> vagas restantes hoje
-      </div>
+      <!-- 2026-09-19 — A CAIXA DE "VAGAS RESTANTES HOJE" SAIU JUNTO COM O POPUP.
+           O numero dela nascia de `Math.random()` entre 30 e 40 e caia a cada aviso falso; sem o
+           bloco do popup, ela ficaria na tela com o numero VAZIO. O dado real existe (11 grupos,
+           teto 950, contagem sincronizada no Upstash) e pode voltar a qualquer momento — vindo
+           de la, e so dele pedir. -->
 
       <!-- CTA -->
       <!-- 2026-09-02: o destino passou a ser NOSSO /g, e nao mais o redirecionador de
@@ -162,29 +163,6 @@
       •
       <a href="termos.html">Termos de Uso</a>
     </footer>
-
-  </div>
-
-  <!-- POPUP -->
-  <div id="joinPopup" class="join-popup">
-
-    <div class="popup-icon">
-
-      <svg xmlns="http://www.w3.org/2000/svg"
-           width="22"
-           height="22"
-           fill="white"
-           viewBox="0 0 24 24">
-
-        <path d="M20.52 3.48A11.8 11.8 0 0012.04 0C5.42 0 .04 5.38.04 12c0 2.12.56 4.2 1.62 6.04L0 24l6.15-1.6A11.96 11.96 0 0012.04 24c6.62 0 12-5.38 12-12 0-3.2-1.25-6.21-3.52-8.52z"/>
-      </svg>
-
-    </div>
-
-    <div class="popup-text">
-      <div id="popupName" class="popup-name"></div>
-      <div class="popup-action">entrou no grupo</div>
-    </div>
 
   </div>
 
