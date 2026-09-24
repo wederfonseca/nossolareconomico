@@ -119,6 +119,24 @@ end
 -- novo, que é o que tem mais folga até os 1.024). Antes o "último" era capturado ANTES de olhar
 -- o 'ativo': um grupo que ele tirou do rodízio (ativo=0) podia receber todo o tráfego quando os
 -- outros lotassem.
+-- 2026-09-24 -- as VAGAS DA FILA INTEIRA, para o aviso de "crie o proximo grupo".
+-- O aviso olhava so o grupo da vez: o #006 chegou a 893 de 950 e ele recebia, de hora em hora,
+-- "vale criar o proximo antes de lotar" com uns 4.000 lugares livres nos outros dez grupos.
+-- Criar grupo e decisao sobre a FILA, entao a regua e a soma das vagas de quem pode receber
+-- (ativo, com link) -- a mesma condicao que decide para onde vai o clique.
+local function vagas_da_fila()
+  local total = 0
+  for j = 1, n do
+    local hj = 'g:grupo:' .. fila[j]
+    local lj = redis.call('HGET', hj, 'link')
+    if lj and lj ~= '' and redis.call('HGET', hj, 'ativo') ~= '0' then
+      local tj = tonumber(redis.call('HGET', hj, 'teto') or '${TETO_PADRAO}')
+      local cj = tonumber(redis.call('HGET', hj, 'contador') or '0')
+      if cj < tj then total = total + (tj - cj) end
+    end
+  end
+  return total
+end
 local ultimo_id, ultimo_link, ultimo_idx = nil, nil, 0
 for passo = 0, n - 1 do
   local i = ((inicio - 1 + passo) % n) + 1
@@ -133,7 +151,7 @@ for passo = 0, n - 1 do
       local novo = redis.call('HINCRBY', h, 'contador', 1)
       redis.call('SET', chave_cursor, id)
       registrar(id)
-      return { id, link, tostring(novo), tostring(teto) }
+      return { id, link, tostring(novo), tostring(teto), tostring(vagas_da_fila()) }
     end
   end
 end
@@ -296,17 +314,21 @@ export default async (request, context) => {
       return mandar(LINK_RESERVA);
     }
 
-    const [id, link, contador, teto] = r;
+    const [id, link, contador, teto, vagasDaFila] = r;
 
     if (contador === "LOTADO") {
       await avisar(env, "todos-lotados",
         `🔴 Redirecionador: TODOS os grupos passaram do teto. Ainda estou mandando pro "${id}", mas crie o próximo grupo e cadastre o link.`);
     } else {
-      const n = parseInt(contador, 10);
-      const t = parseInt(teto, 10);
-      if (t > 0 && n >= Math.floor(t * 0.94)) {
-        await avisar(env, `quase-${id}`,
-          `⚠️ Grupo "${id}" em ${n} de ${t}. Vale criar o próximo antes de lotar.`);
+      /* 2026-09-24 — a régua é a FILA, não o grupo da vez. Antes: "grupo X ≥ 94% do teto" ⇒
+         "vale criar o próximo" — e ele recebia isso de hora em hora sobre o #006 com uns 4.000
+         lugares livres nos outros grupos. Um grupo encher é o rodízio funcionando; o que pede
+         grupo novo é a fila INTEIRA ter menos de um grupo de folga. Chave única (não por grupo),
+         para a trava de 1 h valer para o aviso, e não para cada grupo que passar pelo limiar. */
+      const vagas = parseInt(vagasDaFila, 10);
+      if (Number.isFinite(vagas) && vagas < TETO_PADRAO) {
+        await avisar(env, "fila-quase-cheia",
+          `⚠️ A fila de grupos tem só ${vagas} vaga(s) no total (o "${id}" está em ${contador} de ${teto}). Vale criar o próximo grupo antes de lotar.`);
       }
     }
 
