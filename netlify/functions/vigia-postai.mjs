@@ -109,9 +109,9 @@ export default async () => {
       if (queda.avisou && await travar('postai-voltou')) {
         await telegram(
           '✅ O servidor do Postaí voltou a responder\n\n' +
-          `Ficou fora ${duracao(agora - Date.parse(queda.desde))}\n` +
-          `(desde ${quando(queda.desde)})\n\n` +
-          'A leitura dos grupos volta sozinha.'
+          `Ficou fora ${duracao(agora - Date.parse(queda.desde))} (desde ${quando(queda.desde)}).\n` +
+          'A leitura dos grupos e os avisos voltam sozinhos.\n\n' +
+          '→ Nada a fazer.'
         );
       }
       await redis(['DEL', CHAVE_QUEDA]);
@@ -137,14 +137,13 @@ export default async () => {
   const fora = duracao(agora - Date.parse(queda.desde));
   const texto = queda.avisou
     ? ('⏰ O servidor do Postaí AINDA não está respondendo\n\n' +
-       `Fora há ${fora} (desde ${quando(queda.desde)})\n\n` +
-       'Aviso de novo em 1 hora enquanto não voltar.')
+       `Fora há ${fora} (desde ${quando(queda.desde)}). Os grupos seguem sem leitura.\n\n` +
+       '→ Confira se o PC está ligado e com o Postaí aberto.')
     : ('🔴 O servidor do Postaí não está respondendo\n\n' +
-       `Último sinal ${quando(queda.desde)} (há ${fora})\n` +
-       'Esperado a cada 5 min\n\n' +
-       'PC desligado, sem internet\nou o app parado.\n\n' +
-       'Enquanto isso: sem leitura dos\ngrupos e sem o resumo das 07h.\n\n' +
-       'Aviso de hora em hora e quando voltar.');
+       `Último sinal ${quando(queda.desde)} (há ${fora}).\n` +
+       'Enquanto isso: sem leitura dos grupos, sem os avisos do Postaí e sem o resumo das 7h.\n\n' +
+       '→ Confira se o PC está ligado, com internet e com o Postaí aberto.\n\n' +
+       '(Aviso de hora em hora e quando voltar.)');
   const enviou = await telegram(texto);
   if (enviou) {
     queda = { ...queda, avisou: true, avisos: (queda.avisos || 0) + 1 };

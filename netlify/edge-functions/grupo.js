@@ -327,8 +327,13 @@ export default async (request, context) => {
          para a trava de 1 h valer para o aviso, e não para cada grupo que passar pelo limiar. */
       const vagas = parseInt(vagasDaFila, 10);
       if (Number.isFinite(vagas) && vagas < TETO_PADRAO) {
+        /* 2026-10-04 (V1.1-1723) — mesmo formato dos avisos do Postaí: o que aconteceu, o que
+           causa, uma ação. Texto puro: este canal não manda parse_mode. */
         await avisar(env, "fila-quase-cheia",
-          `⚠️ A fila de grupos tem só ${vagas} vaga(s) no total (o "${id}" está em ${contador} de ${teto}). Vale criar o próximo grupo antes de lotar.`);
+          `⚠️ A fila de grupos está quase cheia\n\n` +
+          `Só ${vagas} vaga(s) somando todos os grupos (o da vez, "${id}", está em ${contador} de ${teto}). ` +
+          `Quando lotar, quem clica no anúncio cai num grupo cheio.\n\n` +
+          `→ Crie o próximo grupo e coloque-o no rodízio pelo Postaí.`);
       }
     }
 
