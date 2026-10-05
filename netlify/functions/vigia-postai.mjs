@@ -106,15 +106,27 @@ export default async () => {
 
   if (vivo) {
     if (queda) {
-      if (queda.avisou && await travar('postai-voltou')) {
+      // 2026-10-05 — QUEM SABE A HORA DA VOLTA E O POSTAI. Este cron so roda de hora em hora:
+      // em 05/10 o PC voltou 13:14 e o "voltou" daqui saiu ~14:00, com "ficou fora" contado ate
+      // a hora do cron. Agora o Postai avisa no boot (postai_volta.py) e deixa:
+      //   g:postai:voltou_em  — ja mandou a mensagem da volta: aqui so se limpa o estado;
+      //   g:postai:subiu_em   — a hora do boot: e ela que mede "ficou fora", nao o agora.
+      const desdeMs = Date.parse(queda.desde);
+      const voltouEm = await redis(['GET', 'g:postai:voltou_em']);
+      const subiuEm = await redis(['GET', 'g:postai:subiu_em']);
+      const postaiJaAvisou = !!voltouEm && Date.parse(voltouEm) > desdeMs;
+      if (queda.avisou && !postaiJaAvisou && await travar('postai-voltou')) {
+        const volta = subiuEm && Date.parse(subiuEm) > desdeMs ? subiuEm : carimbo;
         await telegram(
           '✅ O servidor do Postaí voltou a responder\n\n' +
-          `Ficou fora ${duracao(agora - Date.parse(queda.desde))} (desde ${quando(queda.desde)}).\n` +
+          `Ficou fora ${duracao(Date.parse(volta) - desdeMs)} ` +
+          `(de ${quando(queda.desde)} a ${quando(volta)}).\n` +
           'A leitura dos grupos e os avisos voltam sozinhos.\n\n' +
           '→ Nada a fazer.'
         );
       }
       await redis(['DEL', CHAVE_QUEDA]);
+      return responder({ estado: 'voltou', postai_ja_avisou: postaiJaAvisou, idade_min: idadeMin });
     }
     return responder({ estado: 'vivo', idade_min: idadeMin });
   }
