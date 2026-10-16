@@ -127,11 +127,13 @@ end
 local function vagas_da_fila()
   local total = 0
   for j = 1, n do
-    local hj = 'g:grupo:' .. fila[j]
-    local lj = redis.call('HGET', hj, 'link')
-    if lj and lj ~= '' and redis.call('HGET', hj, 'ativo') ~= '0' then
-      local tj = tonumber(redis.call('HGET', hj, 'teto') or '${TETO_PADRAO}')
-      local cj = tonumber(redis.call('HGET', hj, 'contador') or '0')
+    -- 2026-10-16 -- UM comando por grupo (HMGET), nao quatro HGET: o Upstash cobra cada comando
+    -- de dentro do script, e cada clique custava ~100 comandos (o banco gratis chegou a 90%).
+    local vj = redis.call('HMGET', 'g:grupo:' .. fila[j], 'link', 'ativo', 'teto', 'contador')
+    local lj = vj[1]
+    if lj and lj ~= '' and vj[2] ~= '0' then
+      local tj = tonumber(vj[3] or '${TETO_PADRAO}')
+      local cj = tonumber(vj[4] or '0')
       if cj < tj then total = total + (tj - cj) end
     end
   end
@@ -142,11 +144,12 @@ for passo = 0, n - 1 do
   local i = ((inicio - 1 + passo) % n) + 1
   local id = fila[i]
   local h  = 'g:grupo:' .. id
-  local link = redis.call('HGET', h, 'link')
-  if link and link ~= '' and redis.call('HGET', h, 'ativo') ~= '0' then
+  local v = redis.call('HMGET', h, 'link', 'ativo', 'teto', 'contador')
+  local link = v[1]
+  if link and link ~= '' and v[2] ~= '0' then
     if i > ultimo_idx then ultimo_id, ultimo_link, ultimo_idx = id, link, i end
-    local teto = tonumber(redis.call('HGET', h, 'teto') or '${TETO_PADRAO}')
-    local c    = tonumber(redis.call('HGET', h, 'contador') or '0')
+    local teto = tonumber(v[3] or '${TETO_PADRAO}')
+    local c    = tonumber(v[4] or '0')
     if c < teto then
       local novo = redis.call('HINCRBY', h, 'contador', 1)
       redis.call('SET', chave_cursor, id)
