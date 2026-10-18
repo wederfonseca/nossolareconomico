@@ -148,6 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   }
 
+  /* 2026-10-18 — o card de oferta e o botao: o MESMO clique (mesmo Lead, mesmo destino). */
+  document.querySelectorAll('[data-cta]').forEach((el) => {
+    el.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      if (button) button.click();
+    });
+  });
+
   /* ================= 2026-09-19 — O POPUP SAIU =================
    *
    * Ele: "retire o popup da landing, nao quero nem o original".
