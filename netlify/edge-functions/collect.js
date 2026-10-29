@@ -117,6 +117,19 @@ export default async (request, context) => {
 
     const counterKey = `nle:counter:${today}`;
 
+    /* 2026-10-29 (ele) — no log, o número curto da campanha e o total dela no dia, ao lado do
+     * total geral. O anúncio chega no `?ad=` da página (o mesmo que o `/grupo` usa). Anúncio novo
+     * sem entrada aqui aparece como "?" — é só acrescentar a linha. */
+    const CAMPANHA_DO_ANUNCIO = {
+      '120250018832290760': '17',
+      '120250216342360760': '19',
+      '120250218158770760': '20'
+    };
+    let adId = '';
+    try { adId = new URL(body.event_source_url || '').searchParams.get('ad') || ''; } catch (e) { adId = ''; }
+    const campanha = CAMPANHA_DO_ANUNCIO[adId] || (adId ? '?' : '-');
+    const campanhaKey = `nle:counter:${today}:c${campanha}`;
+
     /* ================= DEDUP (atômico) ================= */
 
     const dedupeRes = await fetch(
@@ -161,7 +174,9 @@ export default async (request, context) => {
         },
         body: JSON.stringify([
           ['incr', counterKey],
-          ['expire', counterKey, 604800]
+          ['expire', counterKey, 604800],
+          ['incr', campanhaKey],
+          ['expire', campanhaKey, 604800]
         ])
       }
 
@@ -169,6 +184,7 @@ export default async (request, context) => {
 
     const pipelineJson = await pipelineRes.json();
     const dailyCount = pipelineJson[0]?.result || 0;
+    const campanhaCount = pipelineJson[2]?.result || 0;
 
     /* ================= USER DATA ================= */
 
@@ -225,7 +241,8 @@ export default async (request, context) => {
 
     /* ================= LOG ================= */
 
-    console.log(`[${dailyCount}] ${shortEventId} → ${metaRes.status}`);
+    // ex.: "[45] 17·12 a1b2c3d4 → 200" = 45º lead do dia, 12º da campanha 17
+    console.log(`[${dailyCount}] ${campanha}·${campanhaCount} ${shortEventId} → ${metaRes.status}`);
 
     /* ================= RESPONSE ================= */
 
